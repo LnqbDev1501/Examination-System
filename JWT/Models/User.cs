@@ -30,6 +30,12 @@ namespace JWT.Models
 
         public bool IsEmailVerified { get; set; } = false;
 
+        public string? EmailVerificationToken { get; set; }
+
+        public DateTime? EmailVerificationTokenExpiresAt { get; set; }
+
+        public DateTime? EmailVerifiedAt { get; set; }
+
         public bool IsActive { get; set; } = true;
 
         public bool IsDeleted { get; set; } = false;
