@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text;
 
 namespace JWT.Models
 {
@@ -17,6 +18,8 @@ namespace JWT.Models
 
         public bool IsRevoked { get; set; } = false;
 
+        public string ReplaceByToken { get; set; } = string.Empty;
+        public DateTime RevokedAt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         // Navigation
