@@ -19,7 +19,9 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ExamDb>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("MyCnn"));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("MyCnn"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure());
 });
 
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
@@ -77,5 +79,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ExamDb>();
+    await db.Database.MigrateAsync();
+}
 
 app.Run();
