@@ -41,5 +41,6 @@ namespace JWT.Models
         public ICollection<Question> Questions { get; set; } = new List<Question>();
 
         public ICollection<Exam> Exams { get; set; } = new List<Exam>();
+        public ICollection<TeacherSubject> TeacherSubjects { get; set; } = new List<TeacherSubject>();
     }
 }

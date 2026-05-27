@@ -4,6 +4,7 @@ using JWT.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JWT.Migrations
 {
     [DbContext(typeof(ExamDb))]
-    partial class ExamDbModelSnapshot : ModelSnapshot
+    [Migration("20260527010651_Initial2")]
+    partial class Initial2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -642,35 +645,6 @@ namespace JWT.Migrations
                     b.ToTable("TeacherRequest");
                 });
 
-            modelBuilder.Entity("JWT.Models.TeacherSubject", b =>
-                {
-                    b.Property<int>("TeacherSubjectId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TeacherSubjectId"));
-
-                    b.Property<DateTime>("AssignedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("SubjectId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TeacherId")
-                        .HasColumnType("int");
-
-                    b.HasKey("TeacherSubjectId");
-
-                    b.HasIndex("SubjectId");
-
-                    b.HasIndex("TeacherId");
-
-                    b.ToTable("TeacherSubjects");
-                });
-
             modelBuilder.Entity("JWT.Models.User", b =>
                 {
                     b.Property<int>("UserId")
@@ -964,25 +938,6 @@ namespace JWT.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("JWT.Models.TeacherSubject", b =>
-                {
-                    b.HasOne("JWT.Models.Subject", "Subject")
-                        .WithMany("TeacherSubjects")
-                        .HasForeignKey("SubjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("JWT.Models.User", "Teacher")
-                        .WithMany("TeacherSubjects")
-                        .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Subject");
-
-                    b.Navigation("Teacher");
-                });
-
             modelBuilder.Entity("JWT.Models.User", b =>
                 {
                     b.HasOne("JWT.Models.Role", "Role")
@@ -1041,8 +996,6 @@ namespace JWT.Migrations
                     b.Navigation("Exams");
 
                     b.Navigation("Questions");
-
-                    b.Navigation("TeacherSubjects");
                 });
 
             modelBuilder.Entity("JWT.Models.User", b =>
@@ -1062,8 +1015,6 @@ namespace JWT.Migrations
                     b.Navigation("ReviewedTeacherRequests");
 
                     b.Navigation("SentTeacherRequests");
-
-                    b.Navigation("TeacherSubjects");
                 });
 #pragma warning restore 612, 618
         }
