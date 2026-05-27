@@ -66,5 +66,6 @@ namespace JWT.Models
         public ICollection<TeacherRequest> SentTeacherRequests { get; set; } = new List<TeacherRequest>();
 
         public ICollection<TeacherRequest> ReviewedTeacherRequests { get; set; } = new List<TeacherRequest>();
+        public ICollection<TeacherSubject> TeacherSubjects { get; set; } = new List<TeacherSubject>();
     }
 }

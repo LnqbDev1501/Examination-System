@@ -17,7 +17,7 @@ namespace JWT.Data
         public DbSet<Models.StudentAnswer> StudentAnswers { get; set; }
         public DbSet<Models.StudentAnswerOption> StudentAnswerOptions { get; set; }
         public DbSet<Models.Notification> Notifications { get; set; }
-
+        public DbSet<TeacherSubject> TeacherSubjects { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -240,6 +240,7 @@ namespace JWT.Data
                 new Role { RoleId = 2, RoleName = "Teacher" },
                 new Role { RoleId = 3, RoleName = "Student" }
             );
+
         }
 
     }
