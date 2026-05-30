@@ -10,6 +10,8 @@ namespace JWT.Models
 
         public int StudentId { get; set; }
 
+        public int SubjectId { get; set; }
+
         public string? CertificationUrl { get; set; }
 
         public string? Reason { get; set; }
@@ -17,6 +19,7 @@ namespace JWT.Models
         [Required]
         [MaxLength(20)]
         public string Status { get; set; } = "Pending";
+        // Pending, Approved, Rejected
 
         public string? AdminNote { get; set; }
 
@@ -32,6 +35,9 @@ namespace JWT.Models
         // Navigation
         [ForeignKey(nameof(StudentId))]
         public User? Student { get; set; }
+
+        [ForeignKey(nameof(SubjectId))]
+        public Subject? Subject { get; set; }
 
         [ForeignKey(nameof(ReviewedBy))]
         public User? Reviewer { get; set; }

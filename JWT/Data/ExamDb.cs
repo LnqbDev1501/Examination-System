@@ -3,27 +3,44 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JWT.Data
 {
-    public class ExamDb: DbContext
+    public class ExamDb : DbContext
     {
         public ExamDb(DbContextOptions<ExamDb> options) : base(options)
         {
         }
-        public DbSet<Models.User> Users { get; set; }
-        public DbSet<Models.Exam> Exams { get; set; }
-        public DbSet<Models.Question> Questions { get; set; }
-        public DbSet<Models.QuestionOption> QuestionOptions { get; set; }
-        public DbSet<Models.ExamAttempt> ExamAttempts { get; set; }
-        public DbSet<Models.AttemptQuestion> AttemptQuestions { get; set; }
-        public DbSet<Models.StudentAnswer> StudentAnswers { get; set; }
-        public DbSet<Models.StudentAnswerOption> StudentAnswerOptions { get; set; }
-        public DbSet<Models.Notification> Notifications { get; set; }
+
+        public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
+
+        public DbSet<Subject> Subjects { get; set; }
+        public DbSet<Enrollment> Enrollments { get; set; }
+
+        public DbSet<TeacherRequest> TeacherRequests { get; set; }
         public DbSet<TeacherSubject> TeacherSubjects { get; set; }
+
+        public DbSet<Exam> Exams { get; set; }
+        public DbSet<ExamQuestion> ExamQuestions { get; set; }
+
+        public DbSet<Question> Questions { get; set; }
+        public DbSet<QuestionOption> QuestionOptions { get; set; }
+
+        public DbSet<ExamAttempt> ExamAttempts { get; set; }
+        public DbSet<AttemptQuestion> AttemptQuestions { get; set; }
+
+        public DbSet<StudentAnswer> StudentAnswers { get; set; }
+        public DbSet<StudentAnswerOption> StudentAnswerOptions { get; set; }
+
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Unique
+            // =========================
+            // UNIQUE CONFIG
+            // =========================
+
             modelBuilder.Entity<Role>()
                 .HasIndex(r => r.RoleName)
                 .IsUnique();
@@ -40,6 +57,10 @@ namespace JWT.Data
                 .HasIndex(e => new { e.StudentId, e.SubjectId })
                 .IsUnique();
 
+            modelBuilder.Entity<TeacherSubject>()
+                .HasIndex(ts => new { ts.TeacherId, ts.SubjectId })
+                .IsUnique();
+
             modelBuilder.Entity<ExamQuestion>()
                 .HasIndex(eq => new { eq.ExamId, eq.QuestionId })
                 .IsUnique();
@@ -48,7 +69,23 @@ namespace JWT.Data
                 .HasIndex(sa => new { sa.AttemptId, sa.QuestionId })
                 .IsUnique();
 
-            // TeacherRequest có 2 FK về User
+            // =========================
+            // USER - ROLE
+            // =========================
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Role)
+                .WithMany(r => r.Users)
+                .HasForeignKey(u => u.RoleId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // =========================
+            // TEACHER REQUEST
+            // Student gửi request xin làm teacher / xin dạy thêm môn
+            // ReviewedBy là admin duyệt
+            // SubjectId là môn user xin dạy
+            // =========================
+
             modelBuilder.Entity<TeacherRequest>()
                 .HasOne(tr => tr.Student)
                 .WithMany(u => u.SentTeacherRequests)
@@ -61,18 +98,49 @@ namespace JWT.Data
                 .HasForeignKey(tr => tr.ReviewedBy)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Fix multiple cascade paths
-            modelBuilder.Entity<ExamAttempt>()
-                .HasOne(ea => ea.Student)
-                .WithMany(u => u.ExamAttempts)
-                .HasForeignKey(ea => ea.StudentId)
+            modelBuilder.Entity<TeacherRequest>()
+                .HasOne(tr => tr.Subject)
+                .WithMany()
+                .HasForeignKey(tr => tr.SubjectId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<ExamAttempt>()
-                .HasOne(ea => ea.Exam)
-                .WithMany(e => e.ExamAttempts)
-                .HasForeignKey(ea => ea.ExamId)
+            // =========================
+            // TEACHER SUBJECT
+            // Lưu teacher được admin cho dạy subject nào
+            // =========================
+
+            modelBuilder.Entity<TeacherSubject>()
+                .HasOne(ts => ts.Teacher)
+                .WithMany()
+                .HasForeignKey(ts => ts.TeacherId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<TeacherSubject>()
+                .HasOne(ts => ts.Subject)
+                .WithMany()
+                .HasForeignKey(ts => ts.SubjectId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // =========================
+            // ENROLLMENT
+            // Student tham gia subject
+            // =========================
+
+            modelBuilder.Entity<Enrollment>()
+                .HasOne(e => e.Student)
+                .WithMany(u => u.Enrollments)
+                .HasForeignKey(e => e.StudentId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Enrollment>()
+                .HasOne(e => e.Subject)
+                .WithMany(s => s.Enrollments)
+                .HasForeignKey(e => e.SubjectId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // =========================
+            // EXAM
+            // =========================
 
             modelBuilder.Entity<Exam>()
                 .HasOne(e => e.Teacher)
@@ -86,6 +154,10 @@ namespace JWT.Data
                 .HasForeignKey(e => e.SubjectId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // =========================
+            // QUESTION
+            // =========================
+
             modelBuilder.Entity<Question>()
                 .HasOne(q => q.Teacher)
                 .WithMany(u => u.Questions)
@@ -97,6 +169,16 @@ namespace JWT.Data
                 .WithMany(s => s.Questions)
                 .HasForeignKey(q => q.SubjectId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<QuestionOption>()
+                .HasOne(qo => qo.Question)
+                .WithMany(q => q.QuestionOptions)
+                .HasForeignKey(qo => qo.QuestionId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // =========================
+            // EXAM QUESTION
+            // =========================
 
             modelBuilder.Entity<ExamQuestion>()
                 .HasOne(eq => eq.Exam)
@@ -110,6 +192,26 @@ namespace JWT.Data
                 .HasForeignKey(eq => eq.QuestionId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // =========================
+            // EXAM ATTEMPT
+            // =========================
+
+            modelBuilder.Entity<ExamAttempt>()
+                .HasOne(ea => ea.Student)
+                .WithMany(u => u.ExamAttempts)
+                .HasForeignKey(ea => ea.StudentId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<ExamAttempt>()
+                .HasOne(ea => ea.Exam)
+                .WithMany(e => e.ExamAttempts)
+                .HasForeignKey(ea => ea.ExamId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // =========================
+            // ATTEMPT QUESTION
+            // =========================
+
             modelBuilder.Entity<AttemptQuestion>()
                 .HasOne(aq => aq.ExamAttempt)
                 .WithMany(ea => ea.AttemptQuestions)
@@ -121,6 +223,10 @@ namespace JWT.Data
                 .WithMany(q => q.AttemptQuestions)
                 .HasForeignKey(aq => aq.QuestionId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // =========================
+            // STUDENT ANSWER
+            // =========================
 
             modelBuilder.Entity<StudentAnswer>()
                 .HasOne(sa => sa.ExamAttempt)
@@ -146,23 +252,9 @@ namespace JWT.Data
                 .HasForeignKey(sao => sao.OptionId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<QuestionOption>()
-                .HasOne(qo => qo.Question)
-                .WithMany(q => q.QuestionOptions)
-                .HasForeignKey(qo => qo.QuestionId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Enrollment>()
-                .HasOne(e => e.Student)
-                .WithMany(u => u.Enrollments)
-                .HasForeignKey(e => e.StudentId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Enrollment>()
-                .HasOne(e => e.Subject)
-                .WithMany(s => s.Enrollments)
-                .HasForeignKey(e => e.SubjectId)
-                .OnDelete(DeleteBehavior.NoAction);
+            // =========================
+            // NOTIFICATION
+            // =========================
 
             modelBuilder.Entity<Notification>()
                 .HasOne(n => n.User)
@@ -170,13 +262,20 @@ namespace JWT.Data
                 .HasForeignKey(n => n.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // =========================
+            // REFRESH TOKEN
+            // =========================
+
             modelBuilder.Entity<RefreshToken>()
                 .HasOne(rt => rt.User)
                 .WithMany(u => u.RefreshTokens)
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Decimal
+            // =========================
+            // DECIMAL PRECISION
+            // =========================
+
             modelBuilder.Entity<Question>()
                 .Property(q => q.Score)
                 .HasPrecision(5, 2);
@@ -205,7 +304,10 @@ namespace JWT.Data
                 .Property(sa => sa.ScoreAwarded)
                 .HasPrecision(5, 2);
 
-            // RowVersion
+            // =========================
+            // ROW VERSION
+            // =========================
+
             modelBuilder.Entity<User>()
                 .Property(u => u.RowVersion)
                 .IsRowVersion();
@@ -234,14 +336,15 @@ namespace JWT.Data
                 .Property(ea => ea.RowVersion)
                 .IsRowVersion();
 
-            // Seed roles
+            // =========================
+            // SEED DATA
+            // =========================
+
             modelBuilder.Entity<Role>().HasData(
                 new Role { RoleId = 1, RoleName = "Admin" },
                 new Role { RoleId = 2, RoleName = "Teacher" },
                 new Role { RoleId = 3, RoleName = "Student" }
             );
-
         }
-
     }
 }
